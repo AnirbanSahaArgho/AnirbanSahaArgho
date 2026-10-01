@@ -1,0 +1,58 @@
+name: Validate GitHub Profile
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    name: Validate Profile Assets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check required files
+        run: |
+          test -s README.md
+          test -s hero.svg
+          test -s about-life.svg
+          test -s stack.svg
+          test -s id-dashboard.svg
+          test -s connect.svg
+          test -s assets/character.png
+          test -s fonts/display.woff2
+          test -s fonts/mono.woff2
+
+      - name: Check profile information
+        run: |
+          grep -q 'AnirbanSahaArgho' README.md
+          grep -q 'Anirban Saha Argho' README.md
+          grep -q 'Andhra University' README.md
+
+      - name: Validate SVG files
+        run: |
+          for file in hero.svg about-life.svg stack.svg id-dashboard.svg connect.svg; do
+            python - "$file" <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          filename = sys.argv[1]
+
+          try:
+              ET.parse(filename)
+              print(f"✓ Valid SVG XML: {filename}")
+          except Exception as error:
+              print(f"✗ Invalid SVG: {filename}")
+              print(error)
+              sys.exit(1)
+          PY
+          done
+
+      - name: Validation successful
+        run: echo "✓ GitHub profile validation completed successfully!"
